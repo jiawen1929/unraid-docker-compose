@@ -801,7 +801,7 @@ services:
     volumes:
       - ${DATA_PATH}/immich/config:/config         # 配置路径
       - ${DATA_PATH}/immich/photo:/photos          # 相册
-      #- path_to_imports:/import:ro             # 读取本地已有相册
+      #- path_to_imports:/import:ro             # 读取本地已有相册路径
     environment:
       <<: *env
       DB_HOSTNAME: "immich-postgres"        # pg数据库主机名或者IP
@@ -812,10 +812,13 @@ services:
       #DB_PORT=5432 #optional
       #REDIS_PORT=6379 #optional
       #REDIS_PASSWORD= #optional
+      #MACHINE_LEARNING_GPU_ACCELERATION: "cuda"  # 通过将值设置为“cuda”来启用 cuda 加速 N卡用
+      MACHINE_LEARNING_HOST: "0.0.0.0"
+      MACHINE_LEARNING_PORT: "3003"
       MACHINE_LEARNING_WORKERS: "1" #optional   打开机器学习 老旧设备如果效果不好请关闭 设置为 0
       MACHINE_LEARNING_WORKER_TIMEOUT: "120" #optional    机器学习超时  120秒
-      #HTTP_PROXY: "http://v2:20172"          # 这2个是给容器传递科学环境的 环境变量 
-      #HTTPS_PROXY: "http://v2:20172"
+      #HTTP_PROXY: "http://192.168.100.9:10809"          # 这2个是给容器传递科学环境的 环境变量 要打开的，否则机器学习模型down不下来
+      #HTTPS_PROXY: "http://192.168.100.9:10809"
     ports:
       - 2283:8080
     devices:
