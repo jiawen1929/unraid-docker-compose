@@ -423,7 +423,7 @@ services:
       <<: *env
       - WG_HOST=raspberrypi.local   # you.domain.com 你的域名地址 不要协议头 ⚠️ 
       - PASSWORD=foobar123          # *必填 web登录密码  ⚠️ 
-      # - WG_PORT=51820               # 可选 如果是bridge的方式部署 这里写容器外的端口号，如果下面的ports那边映射的是11820：51820的话 这里就是11820了
+      # - WG_PORT=51820               # 可选 开启这个变量定义后的端口  容器内外 都是  自定义端口了  如这里自定了 51888  那下面的ports 那边定义 51888:51888
       # - WG_DEFAULT_ADDRESS_IPV4=10.8.0.x    # 可选 你的wg私网v4网段  最后一个必须是  x 
       # - WG_DEFAULT_ADDRESS_IPV6=fd42:42:42::x   # 可选 你的wg v6私网网段 最后一个必须是 x 可以保持默认
       # - WG_DEFAULT_DNS=223.5.5.5,119.29.29.29                 # 可选 默认是阿里云的v4&v6的公共dns地址
