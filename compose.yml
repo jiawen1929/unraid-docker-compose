@@ -9,7 +9,7 @@ x-environment: &env           # unraid权限设置
     PUID: "99"
     PGID: "100"        
 
-# 上面创建锚点 下面使用
+# 上面创建锚点 下面使用 拆分的时候记得取头 取尾 
 services:
 #   注意事项: ❗❗❗ ❗❗❗ 
 #
@@ -32,6 +32,7 @@ services:
 #          6. transmission 下面有下载webui的界面地址和说明 
 #
 # **********************************************  数据库管理 && 工具 *********************************************************** 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   pgadmin4:
     image: dpage/pgadmin4
     container_name: pgadmin4
@@ -49,6 +50,8 @@ services:
       - ${DATA_PATH}/pgadmin/data:/var/lib/pgadmin
     <<: *conf
 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
   adminer:
     image: adminer
     container_name: adminer
@@ -64,6 +67,7 @@ services:
       ADMINER_PLUGINS: "json-column"             # 插件 填名称  https://www.adminer.org/  首页有插件页进去
 
 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
@@ -80,6 +84,8 @@ services:
       WATCHTOWER_ROLLING_RESTART: "true" # 每次只停止并更新一个容器
     network_mode: "host"
 
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   pairdrop:
     image: linuxserver/pairdrop
     container_name: pairdrop
@@ -92,6 +98,8 @@ services:
     ports:
       - 84:3000
     <<: *conf
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ******************************************************************************************************* 
 #  rclone:                                # 挂载是没问题就是重启后挂载失败 原因是重启前没有unmount
 #    image: d2dyno/rclone-gui
@@ -117,6 +125,7 @@ services:
 
 
 # ********************************************** 影音媒体类 ***********************************************************
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   jf:
     image: nyanmisaka/jellyfin         # n大版jf 开箱即用
     container_name: jellyfin
@@ -137,6 +146,8 @@ services:
       - "/dev:/dev"
 
 
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   emby:
     image: linuxserver/emby
     container_name: emby
@@ -155,7 +166,9 @@ services:
     privileged: true
     devices:
       - "/dev:/dev"
-  
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   plex:
     image: linuxserver/plex
     container_name: plex
@@ -180,7 +193,10 @@ services:
     privileged: true
     devices:
       - "/dev:/dev"
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ********************************************** PT & BT 相关应用 ***********************************************************
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   iyuu:
     image: iyuucn/iyuuplus
     container_name: iyuu
@@ -197,8 +213,10 @@ services:
       <<: *env
     <<: *conf
 
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   nt:    # v3版本
-    image: hsuyelin/nas-tools
+    image: 0xforee/nas-tools
     container_name: nas-tools
     labels:
       net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Nastools_A.png"
@@ -213,22 +231,7 @@ services:
       <<: *env
   
 
-  mp:
-    image: jxxghp/moviepilot
-    container_name: moviepilot
-    labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Moviepilot_A.png"
-      net.unraid.docker.webui: "http://[IP]:[PORT:3002]"
-    volumes:
-      - ${DATA_PATH}/moviepilot:/config
-      - ${MOVIE_DATA}:/movie_data   # 要和下载器配置一致
-    ports:
-      - 3002:3000
-    env_file:
-      - ./app.env
-    <<: *conf
-
-# ———————— 黑色马甲一件 ——————————
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   jk:
     image: linuxserver/jackett
     container_name: jackett
@@ -246,7 +249,7 @@ services:
     ports:
       - 9117:9117
     
-# —————— 字幕下载 ——————————
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   csf:
     image: allanpk716/chinesesubfinder:latest-lite
     container_name: chinesesubfinder
@@ -266,7 +269,10 @@ services:
         driver: "json-file"
         options:
           max-size: "100m" # 限制docker控制台日志大小，可自行调整
-# ———— PT佬必备 ————————————
+
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   cc:
     image: easychen/cookiecloud
     container_name: cookiecloud
@@ -280,6 +286,30 @@ services:
     environment:
       <<: *env
 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  tinymediamanager:                  # tmm刮削器
+    image: tinymediamanager/tinymediamanager:latest
+    labels:
+      net.unraid.docker.icon: "https://www.tinymediamanager.org/images/tmm.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:4000]"
+    container_name: tinymediamanager
+    environment:
+      - USER_ID=99
+      - GROUP_ID=100
+      - ALLOW_DIRECT_VNC=true
+      - LC_ALL=en_US.UTF-8 # force UTF8
+      - LANG=en_US.UTF-8   # force UTF8
+      - TZ=Asia/Shanghai
+    volumes:
+      - ${DATA_PATH}/tmm:/data
+      #- </path/to/movies>:/media/movies
+      - ${MOVIE_DATA}/电视剧:/media/tv_shows
+    ports:
+      #- 5900:5900 # VNC port
+      - 4000:4000 # Webinterface
+    <<: *conf
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 本项目需要搭配浏览器插件 并且在浏览器插件里填写相应的 ip 端口 以及有公网访问需求的话建议在配置文件里开启并加上token
   kubespider:
     image: cesign/kubespider
@@ -288,7 +318,7 @@ services:
       net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Kubespider_A.png"
       com.centurylinklabs.watchtower.enable: "true"
     depends_on:
-      - qb             
+      - qb               # 需依赖qb 和 aria2 启动
       - aria2
     environment:
       <<: *env
@@ -297,6 +327,9 @@ services:
     volumes:
       - ${DATA_PATH}/kubespider:/app/.config         # 去路径下 更改配置文件
     <<: *conf
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # **********************************************  下载器类 ***********************************************************
   qb:                                 # qb启动完成看日志  有随机密码  
     image: johngong/qbittorrent
@@ -321,6 +354,8 @@ services:
       QB_TRACKERS_LIST_URL: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt"
 
 
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   tr:
     image: linuxserver/transmission
     container_name: transmission
@@ -346,7 +381,7 @@ services:
       - 51413:51413
       - 51413:51413/udp
 
-# ———————————————— aria2后端 ———————————
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   aria2:
     container_name: aria2
     image: p3terx/aria2-pro
@@ -375,7 +410,6 @@ services:
       options:
         max-size: "1M"
 
-# ———————————————— aria2前端 —————————————
   ariang:
     container_name: ariang
     image: p3terx/ariang
@@ -391,9 +425,53 @@ services:
       driver: "json-file"
       options:
         max-size: "1M"
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# **********************************************  科学类 ***********************************************************
-# ———— 懂的都懂 ——————
+  xunlei:
+    image: cnk3x/xunlei
+    labels:
+      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Xunlei_A.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:2345]"
+    privileged: true
+    container_name: xunlei
+    network_mode: host
+    environment:
+      UID: 99
+      GID: 100
+#      HTTP_PROXY: "http://192.168.100.9:10809"       # 添加代理  第一次启动初始化需要去github下载  
+#      HTTPS_PROXY: "http://192.168.100.9:10809"
+    volumes:
+      - ${DATA_PATH}/xunlei:/xunlei/data
+      - ${MOVIE_DATA}:/xunlei/downloads
+    restart: unless-stopped
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  torrserver:
+    image: ghcr.io/yourok/torrserver
+    container_name: torrserver
+    labels:
+      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/torrserver.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:5665]"  
+    environment:
+      <<: *env
+      TS_PORT: 5665      # 修改覆盖默认端口
+      TS_DONTKILL: 1
+      TS_HTTPAUTH: 0      # 0为关闭 1为开启 身份验证 将身份验证文件放入~/ts/config文件夹以启用基本身份验证
+      TS_CONF_PATH: "/opt/ts/config"     # 修改则 覆盖默认配置路径
+      TS_TORR_DIR: "/opt/ts/torrents"    # 修改则 覆盖默认种子路径
+    volumes:
+      - '${DATA_PATH}/torrent/torrents:/opt/ts/torrents'
+      - '${DATA_PATH}/torrent/config:/opt/ts/config'
+    ports:
+      - '5665:5665'
+      - '60000:60000/udp'
+    <<: *conf
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# ************************  科学类 ***********************
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   v2:
     image: mzz2017/v2raya
     container_name: v2raya
@@ -415,7 +493,41 @@ services:
       - /lib/modules:/lib/modules:ro
       - /etc/resolv.conf:/etc/resolv.conf
 
-# —————— 超好用的wirguard ——————
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  xray:
+    image: teddysun/xray
+    container_name: xray
+    labels:
+      net.unraid.docker.icon: "https://cdn.jsdelivr.net/gh/IceWhaleTech/AppIcon@main/all/xray.png"
+      com.centurylinklabs.watchtower.enable: true
+    restart: unless-stopped
+    volumes:
+      - ${DATA_PATH}/xray:/etc/xray      # 需要准备config.yml  可以从 v2rayN 导出
+    network_mode: host
+    privileged: true
+    environment:
+      - TZ=Asia/Shanghai
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  sing-box:
+    image: leesonaa/sing-box
+    container_name: sing-box
+    labels:
+      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/xushier/HD-Icons/main/border-radius/Singbox_A.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:9090]"  
+      com.centurylinklabs.watchtower.enable: true
+    network_mode: host
+    restart: always
+    volumes:
+      - ${DATA_PATH}/sing-box/:/etc/sing-box/               # 同样需要config.json   可以从v2rayN 导出
+    command: -D /var/lib/sing-box -C /etc/sing-box/ run
+    environment:           
+      TZ: Asia/Shanghai
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   wg:
     image: leesonaa/wgcnv6-easy
     container_name: wg
@@ -446,8 +558,10 @@ services:
       - net.ipv6.conf.all.forwarding=1
       - net.ipv6.conf.default.forwarding=1
       - net.ipv6.conf.eth0.proxy_ndp=1
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # **********************************************  自建网盘类 ***********************************************************
-# —————— alist  ————————
   alist:
     image: xhofe/alist
     container_name: alist
@@ -466,7 +580,8 @@ services:
       PGID: "0"
       UMASK: "022"
 
-# ——————— nascab —————————
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   cab:
     image: ypptec/nascab
     container_name: nascab
@@ -487,7 +602,7 @@ services:
         max-size: "10M"
         max-file: "3"
 
-# —————————————————  这一段是webos的相关配置  ——————————————————————
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   webos:
     image: fs185085781/webos
     container_name: webos
@@ -533,11 +648,11 @@ services:
     <<: *conf
     environment:
       <<: *env
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 # **********************************************  一般工具类 ***********************************************************
 
-# ——————  公网利器lucky ————————
   lucky:
     image: gdy666/lucky
     container_name: lucky
@@ -549,7 +664,8 @@ services:
     network_mode: host
     restart: always
 
-# ——— 签到 ————
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   qd:
     image: qdtoday/qd
     container_name: qiandao
@@ -565,7 +681,8 @@ services:
       PROXIES: "v2:20172"   # 代理地址
     <<: *conf
 
-# —————— syncthing同步 ————————
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   syncthing:
     image: syncthing/syncthing
     container_name: syncthing
@@ -578,7 +695,27 @@ services:
       - ${DATA_PATH}/sync:/var/syncthing 
     network_mode: host
 
-# —————— 青龙 ——————————
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  resilio-sync:
+    image: linuxserver/resilio-sync
+    container_name: resilio-sync
+    labels:
+      net.unraid.docker.icon: "https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Resilio-sync/icon.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:8888]"
+    environment:
+      <<: *env
+    volumes:
+      - ${DATA_PATH}/resilio-sync/config:/config
+      - ${MOVIE_DATA}/downloads:/downloads   # 下载/缓存的文件夹
+      - ${MOVIE_DATA}:/sync          # 往远端同步目录
+    ports:
+      - 8888:8888
+      - 55555:55555
+    <<: *conf
+
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   ql:
     image: whyour/qinglong
     container_name: qinglong
@@ -594,7 +731,8 @@ services:
       <<: *env
     <<: *conf
 
-# ————————  vaultwarden密码  ——————————
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   vaultwarden:
     image: vaultwarden/server
     container_name: vaultwarden
@@ -611,6 +749,7 @@ services:
     <<: *conf
 
 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ———————— heimdall导航 ——————————————   弃用 打开速度太慢了
 # css 文件 请参考 https://github.com/leesonaa/unraid-docker-compose 里heimdall css文件
 #  heimdall:
@@ -627,6 +766,8 @@ services:
 #      - 82:80
 #    <<: *conf
 
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ———————— sun-panel导航面板 —————————————— user: admin@sun.cc  passwd: 12345678
   sun-panel:
     image: hslr/sun-panel
@@ -645,7 +786,7 @@ services:
       <<: *env
     <<: *conf
 
-# ——————————————————————————————————————————————————————————————————————————————————————————
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  excalidraw:
 #    image: excalidraw/excalidraw
 #    container_name: excalidraw
@@ -721,9 +862,8 @@ services:
       - 85:80
     <<: *conf
 
-
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # **********************************************  笔记备忘录类 ***********************************************************
-# ————————  备忘录  ————————
   memos:
     image: neosmemo/memos
     container_name: memos
@@ -737,7 +877,9 @@ services:
     environment:
       <<: *env 
     <<: *conf
-# trilium 中文翻译版 推荐 有画板集成    
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   trilium-cn:   
     image: leesonaa/trilium-cn
     container_name: trilium-cn
@@ -753,7 +895,9 @@ services:
       #TRILIUM_DATA_DIR: "/root/trilium-data"   # 可选，自定义存储路径 注意 是容器内
     <<: *conf
 
-# —————————— joplin ———————
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   joplinpg:                                                   # joplin pg 数据库配置
     image: postgres
     container_name: joplinpg
@@ -791,17 +935,20 @@ services:
       POSTGRES_USER: "joplin"
       POSTGRES_PORT: "5432"
       POSTGRES_HOST: "joplinpg"
-# --------- immich相册 --------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   immich:                              # 前端   using aio project https://github.com/imagegenius/docker-immich
     container_name: immich
-    image: ghcr.dockerproxy.com/ghcr.io/imagegenius/immich:latest
+    image: leesonaa/immich:latest
     labels:
       net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Immich_B.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:2283]"
+      #com.centurylinklabs.watchtower.enable: true
     volumes:
       - ${DATA_PATH}/immich/config:/config         # 配置路径
       - ${DATA_PATH}/immich/photo:/photos          # 相册
-      #- path_to_imports:/import:ro             # 读取本地已有相册路径
+      #- path_to_imports:/import:ro             # 读取本地已有相册
     environment:
       <<: *env
       DB_HOSTNAME: "immich-postgres"        # pg数据库主机名或者IP
@@ -817,7 +964,7 @@ services:
       MACHINE_LEARNING_PORT: "3003"
       MACHINE_LEARNING_WORKERS: "1" #optional   打开机器学习 老旧设备如果效果不好请关闭 设置为 0
       MACHINE_LEARNING_WORKER_TIMEOUT: "120" #optional    机器学习超时  120秒
-      #HTTP_PROXY: "http://192.168.100.9:10809"          # 这2个是给容器传递科学环境的 环境变量 要打开的，否则机器学习模型down不下来
+      #HTTP_PROXY: "http://192.168.100.9:10809"          # 这2个是给容器传递科学环境的 环境变量 
       #HTTPS_PROXY: "http://192.168.100.9:10809"
     ports:
       - 2283:8080
@@ -854,7 +1001,8 @@ services:
     volumes:
       - ${DATA_PATH}/immich-pgdata:/var/lib/postgresql/data
     <<: *conf
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 # 自定义网卡 驱动为桥接  这样的好处就是 比如我有10个redis缓存服务 只对容器服务 就是让容器去调用它 我自己也没有访问它的需求 不需要做-p端口映射的操作 那么我只需要用主机名+默认端口的方式去访问就可以 因为在内部它是一个容器一个私有ip地址的 
 networks:
