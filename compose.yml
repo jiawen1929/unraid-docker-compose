@@ -895,7 +895,20 @@ services:
       #TRILIUM_DATA_DIR: "/root/trilium-data"   # 可选，自定义存储路径 注意 是容器内
     <<: *conf
 
-
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  otterwiki:
+    image: redimp/otterwiki:2
+    container_name: otterwiki
+    labels:
+      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/redimp/otterwiki/main/otterwiki/static/img/otterhead.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:8081]" 
+    ports:
+      - 8081:80
+    volumes:
+      - ${DATA_PATH}/otterwiki/app-data:/app-data
+    environment:
+      <<: *env
+    <<: *conf
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   joplinpg:                                                   # joplin pg 数据库配置
