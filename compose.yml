@@ -33,11 +33,87 @@ services:
 #
 # **********************************************  数据库管理 && 工具 *********************************************************** 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  otterwiki:
+    image: redimp/otterwiki:2
+    container_name: otterwiki
+    labels:
+      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/redimp/otterwiki/main/otterwiki/static/img/otterhead.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:8081]" 
+    ports:
+      - 8081:80
+    volumes:
+      - ${DATA_PATH}/otterwiki/app-data:/app-data
+    environment:
+      <<: *env
+    <<: *conf
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ollama:
+    container_name: ollama                               ## ❗❗❗ ❗❗❗  设备不吊不要尝试    ❗❗❗ ❗❗❗ 
+    image: ollama/ollama
+    labels:
+      net.unraid.docker.icon: "https://ollama.com/public/assets/c889cc0d-cb83-4c46-a98e-0d0e273151b9/42f6b28d-9117-48cd-ac0d-44baaf5c178e.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:11434]"
+    ports:
+      - "11434:11434" # Ollama API
+    volumes:
+      - ${DATA_PATH}/ollama/models:/root/.ollama
+    <<: *config
+    devices:
+      - "/dev/dri/card0:/dev/dri/card0"                       # 可以写n卡的位置映射
+      - "/dev/dri/renderD128:/dev/dri/renderD128"
+
+  open-webui:
+    container_name: open-webui
+    image: ghcr.io/open-webui/open-webui:main
+    depends_on:
+      - "ollama"
+    labels:
+      net.unraid.docker.icon: "https://docs.openwebui.com/images/logo.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:8181]"
+    ports:
+      - "8181:8080" 
+    volumes:
+      - ${DATA_PATH}/openwebui:/app/backend/data
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434   # 这里是api的ip和端口
+      
+    <<: *config
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  chromium:
+    image: linuxserver/chromium
+    labels:
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/chromium-logo.png"
+      net.unraid.docker.webui: "http://[IP]:[PORT:30000]"
+    container_name: chromium
+    environment:
+      - PUID=99
+      - PGID=100
+      - TZ=Asia/Shanghai
+      - CHROME_CLI=https://www.baidu.com       # 默认打开的页面
+      - DOCKER_MODS=linuxserver/mods:universal-package-install
+      - INSTALL_PACKAGES=fonts-noto-cjk          # 安装中文字体
+      - LC_ALL=zh_CN.UTF-8
+      - CUSTOM_PORT=30000
+      - CUSTOM_HTTPS_PORT=30001
+      - http_proxy=http://192.168.100.4:10809          # 挂个http代理加速字体安装
+      - https_proxy=http://192.168.100.4:10809
+    volumes:
+      - ${DATA_PATH}/chrom:/config
+    ports:
+      - "30000:30000"
+      - "30001:30001"
+    <<: *conf
+    devices:
+      - "/dev/dri:/dev/dri"
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   pgadmin4:
     image: dpage/pgadmin4
     container_name: pgadmin4
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Postgresql_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Postgresql_B.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:8082]"
     environment:
       TZ: Asia/Shanghai
@@ -56,10 +132,10 @@ services:
     image: adminer
     container_name: adminer
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Adminer_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Adminer_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:8080]"
     ports:
-      - 8080:8080
+      - "8080:8080"
     <<: *conf
     environment:
       <<: *env
@@ -72,7 +148,7 @@ services:
     image: containrrr/watchtower
     container_name: watchtower
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Watchtower_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Watchtower_A.png"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
@@ -91,12 +167,12 @@ services:
     container_name: pairdrop
     labels:
       #com.centurylinklabs.watchtower.enable: true  # 带标签 确定watchtower可以定位更新
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Snapdrop_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Snapdrop_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:84]"
     environment:
       <<: *env
     ports:
-      - 84:3000
+      - "84:3000"
     <<: *conf
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -173,7 +249,7 @@ services:
     image: linuxserver/plex
     container_name: plex
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Plex_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Plex_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:32400]"
     ports:
       - 32400:32400 
@@ -219,7 +295,7 @@ services:
     image: 0xforee/nas-tools
     container_name: nas-tools
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Nastools_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Nastools_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:3001]"
     ports:
       - 3001:3000
@@ -254,7 +330,7 @@ services:
     image: allanpk716/chinesesubfinder:latest-lite
     container_name: chinesesubfinder
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Chinesesubfinder_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Chinesesubfinder_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:19035]"
     volumes:
       - ${DATA_PATH}/chinesesubfinder:/config  # 冒号左边请修改为你想在主机上保存配置、日志等文件的路径
@@ -277,7 +353,7 @@ services:
     image: easychen/cookiecloud
     container_name: cookiecloud
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Cookiecloud_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Cookiecloud_A.png"
     volumes:
       - ${DATA_PATH}/cookiecloud:/data/api/data
     ports:
@@ -315,7 +391,7 @@ services:
     image: cesign/kubespider
     container_name: kubespider
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Kubespider_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Kubespider_A.png"
       com.centurylinklabs.watchtower.enable: "true"
     depends_on:
       - qb               # 需依赖qb 和 aria2 启动
@@ -351,7 +427,7 @@ services:
       #QB_EE_BIN: "true"      # 这是启动EE增强版 反迅雷吸血
       QB_WEBUI_PORT: "8989"
       QB_TRACKERS_UPDATE_AUTO: "true"
-      QB_TRACKERS_LIST_URL: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt"
+      QB_TRACKERS_LIST_URL: "https://gh-proxy.com/https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt"
 
 
 
@@ -386,7 +462,7 @@ services:
     container_name: aria2
     image: p3terx/aria2-pro
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Aria2_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Aria2_B.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:6880]"
     ports:
       - 6800:6800
@@ -414,7 +490,7 @@ services:
     container_name: ariang
     image: p3terx/ariang
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Aria2_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Aria2_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:6880]"
     ports:
       - 6880:6880
@@ -430,7 +506,7 @@ services:
   xunlei:
     image: cnk3x/xunlei
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Xunlei_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Xunlei_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:2345]"
     privileged: true
     container_name: xunlei
@@ -451,7 +527,7 @@ services:
     image: ghcr.io/yourok/torrserver
     container_name: torrserver
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/torrserver.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/torrserver.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:5665]"  
     environment:
       <<: *env
@@ -476,7 +552,7 @@ services:
     image: mzz2017/v2raya
     container_name: v2raya
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/V2raya_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/V2raya_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:2017]"
       com.centurylinklabs.watchtower.enable: "true"         # 设置watchtower 监控更新标签
     privileged: true
@@ -515,7 +591,7 @@ services:
     image: leesonaa/sing-box
     container_name: sing-box
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/xushier/HD-Icons/main/border-radius/Singbox_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/xushier/HD-Icons/main/border-radius/Singbox_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:9090]"  
       com.centurylinklabs.watchtower.enable: true
     network_mode: host
@@ -586,7 +662,7 @@ services:
     image: ypptec/nascab
     container_name: nascab
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Nascab_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Nascab_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:81]"
     ports:
       - 81:80  # http port
@@ -607,7 +683,7 @@ services:
     image: fs185085781/webos
     container_name: webos
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Webos_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Webos_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:8087]"
     ports:
       - 8087:8088
@@ -644,7 +720,7 @@ services:
     image: redis
     container_name: webosredis
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Redis_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Redis_A.png"
     <<: *conf
     environment:
       <<: *env
@@ -670,7 +746,7 @@ services:
     image: qdtoday/qd
     container_name: qiandao
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Qiandao_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Qiandao_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:8923]"
     ports:
       - 8923:80
@@ -687,7 +763,7 @@ services:
     image: syncthing/syncthing
     container_name: syncthing
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Syncthing_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Syncthing_B.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:8384]"
     environment:
       <<: *env
@@ -737,7 +813,7 @@ services:
     image: vaultwarden/server
     container_name: vaultwarden
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Bitwarden_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Bitwarden_A.png"
       net.unraid.docker.webui: ""  # 你的反向代理域名地址
     volumes:
       - ${DATA_PATH}/vaultwarden:/data
@@ -756,7 +832,7 @@ services:
 #    image: linuxserver/heimdall
 #    container_name: heimdall
 #    labels:
-#      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Heimdall_B.png"
+#      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Heimdall_B.png"
 #      net.unraid.docker.webui: "http://[IP]:[PORT:82]"
 #    environment:
 #      <<: *env
@@ -773,7 +849,7 @@ services:
     image: hslr/sun-panel
     container_name: sun-panel
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/hslr-s/sun-panel/master/doc/images/logo.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/hslr-s/sun-panel/master/doc/images/logo.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:3003]"
     volumes:
     - ${DATA_PATH}/sun-panel/conf:/app/conf
@@ -791,7 +867,7 @@ services:
 #    image: excalidraw/excalidraw
 #    container_name: excalidraw
 #    labels:
-#      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Excalidraw_B.png"
+#      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Excalidraw_B.png"
 #      net.unraid.docker.webui: "http://[IP]:[PORT:85]"
 #    ports:
 #      - "85:80"
@@ -809,7 +885,7 @@ services:
     image: alswl/excalidraw:v0.17.0-fork-b2
     container_name: dw-excalidraw
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Excalidraw_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Excalidraw_B.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:86]"  # 这段其实没啥作用 因为http访问不了 必须使用https
     environment:
       - VITE_APP_BACKEND_V2_GET_URL=https://houduancunchu.baidu.com:1234/scenes/       # 存储后端的域名地址   这里用houduanchunchu.baidu.com:1234 举的例  
@@ -831,7 +907,7 @@ services:
     image: alswl/excalidraw-storage-backend:v2023.11.11
     container_name: dw-storage
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Excalidraw_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Excalidraw_B.png"
     environment: # docs https://github.com/alswl/excalidraw-storage-backend#environement-variables
       PORT: "8081"                  #PORT 服务器监听端口 默认8081  这里要和下面容器内端口一样
       GLOBAL_PREFIX: "/api/v2"            #GLOBAL_PREFIX 每个路由的 API 全局前缀  /api/v2
@@ -848,7 +924,7 @@ services:
     image: redis
     container_name: dw-redis
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Redis_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Redis_A.png"
     <<: *conf
     environment:
       <<: *env      
@@ -857,7 +933,7 @@ services:
     image: excalidraw/excalidraw-room:sha-49bf529
     container_name: dw-room
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Excalidraw_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Excalidraw_B.png"
     ports:
       - 85:80
     <<: *conf
@@ -868,7 +944,7 @@ services:
     image: neosmemo/memos
     container_name: memos
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Memos_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Memos_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:5230]"
     volumes:
       - ${DATA_PATH}/memos:/var/opt/memos
@@ -884,7 +960,7 @@ services:
     image: leesonaa/trilium-cn
     container_name: trilium-cn
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Trilium_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Trilium_A.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:88]"
     ports:
       - 88:8080
@@ -900,7 +976,7 @@ services:
     image: redimp/otterwiki:2
     container_name: otterwiki
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/redimp/otterwiki/main/otterwiki/static/img/otterhead.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/redimp/otterwiki/main/otterwiki/static/img/otterhead.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:8081]" 
     ports:
       - 8081:80
@@ -915,7 +991,7 @@ services:
     image: postgres
     container_name: joplinpg
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Postgresql_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Postgresql_B.png"
     volumes:
       - ${DATA_PATH}/joplinpostgres:/var/lib/postgresql/data
     ports:
@@ -931,7 +1007,7 @@ services:
     image: joplin/server                                   # 默认账户 admin@localhost  密码 admin
     container_name: joplin
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/laurent22/joplin/dev/Assets/LinuxIcons/256x256.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/laurent22/joplin/dev/Assets/LinuxIcons/256x256.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:22300]"
     depends_on:
       - joplinpg
@@ -955,7 +1031,7 @@ services:
     container_name: immich
     image: leesonaa/immich:latest
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Immich_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Immich_B.png"
       net.unraid.docker.webui: "http://[IP]:[PORT:2283]"
       #com.centurylinklabs.watchtower.enable: true
     volumes:
@@ -992,7 +1068,7 @@ services:
     container_name: immich-redis
     image: redis
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Redis_A.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Redis_A.png"
     expose: 
       - "6379"
     environment:
@@ -1003,7 +1079,7 @@ services:
     container_name: immich-postgres
     image: tensorchord/pgvecto-rs:pg14-v0.2.0
     labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Postgresql_B.png"
+      net.unraid.docker.icon: "https://gh-proxy.com/https://raw.githubusercontent.com/leesonaa/icons/main/icons1/Postgresql_B.png"
     environment:
       <<: *env
       POSTGRES_PASSWORD: "immich"       # 初始化数据库
