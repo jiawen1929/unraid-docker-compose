@@ -33,20 +33,6 @@ services:
 #
 # **********************************************  数据库管理 && 工具 *********************************************************** 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  otterwiki:
-    image: redimp/otterwiki:2
-    container_name: otterwiki
-    labels:
-      net.unraid.docker.icon: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/redimp/otterwiki/main/otterwiki/static/img/otterhead.png"
-      net.unraid.docker.webui: "http://[IP]:[PORT:8081]" 
-    ports:
-      - 8081:80
-    volumes:
-      - ${DATA_PATH}/otterwiki/app-data:/app-data
-    environment:
-      <<: *env
-    <<: *conf
-
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   ollama:
     container_name: ollama                               ## ❗❗❗ ❗❗❗  设备不吊不要尝试    ❗❗❗ ❗❗❗ 
@@ -563,7 +549,7 @@ services:
     environment:
       <<: *env
       V2RAYA_LOG_FILE: "/tmp/v2raya.log"
-      V2RAYA_V2RAY_BIN: "/usr/local/bin/v2ray"      # 这行注释掉就会默认使用xray-core
+      V2RAYA_V2RAY_BIN: "/usr/local/bin/v2ray"      
     volumes:
       - ${DATA_PATH}/v2raya:/etc/v2raya
       - /lib/modules:/lib/modules:ro
@@ -730,7 +716,7 @@ services:
 # **********************************************  一般工具类 ***********************************************************
 
   lucky:
-    image: gdy666/lucky
+    image: gdy666/lucky:v2
     container_name: lucky
     labels:
       net.unraid.docker.icon: "https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Lucky/icon.png"
